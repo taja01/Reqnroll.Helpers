@@ -4,7 +4,7 @@
     <Platform Name="arm64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="../VSTableTransformExtension/VSTableTransformExtension.csproj">
+  <Project Path="VSTableTransformExtension/VSTableTransformExtension.csproj" Id="c24bdfcb-7a20-44af-9d8d-49535f4bb3aa">
     <Platform Solution="*|arm64" Project="arm64" />
     <Platform Solution="*|x86" Project="x86" />
   </Project>
