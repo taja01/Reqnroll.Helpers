@@ -1,3 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="src/Reqnroll.Helpers/Reqnroll.Helpers.csproj" />
+  <Project Path="tests/Reqnroll.Helpers.Tests/Reqnroll.Helpers.Tests.csproj" Id="d8d8b224-01b9-434a-9e2f-8e97d7bcbd4a" />
 </Solution>

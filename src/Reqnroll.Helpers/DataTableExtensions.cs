@@ -7,6 +7,8 @@ namespace Reqnroll.Helpers
     public static class DataTableExtensions
     {
         private const BindingFlags PropertyBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private const string PropertyColumnName = "property";
+        private const string BackingFieldNameFormat = "<{0}>k__BackingField";
 
         /// <summary>
         /// Creates a list of objects from a Reqnroll DataTable. 
@@ -48,7 +50,7 @@ namespace Reqnroll.Helpers
             // | Property | Value |
             // | Name     | John  |
             // | Age      | 44    |
-            if (table.Header.Any(h => h.Equals("property", StringComparison.OrdinalIgnoreCase)))
+            if (IsVerticalTable(table))
             {
                 foreach (var row in table.Rows)
                 {
@@ -70,6 +72,8 @@ namespace Reqnroll.Helpers
             return instance;
         }
 
+
+
         /// <summary>
         /// Sets a property value on an instance using reflection. 
         /// If the property is read-only, it attempts to set the value via the C# compiler-generated backing field.
@@ -81,30 +85,41 @@ namespace Reqnroll.Helpers
         /// <exception cref="InvalidOperationException">Thrown if the property cannot be set or conversion fails.</exception>
         private static void SetProperty<T>(T instance, string propertyName, string valueString)
         {
-            var prop = typeof(T).GetProperty(propertyName, PropertyBindingFlags);
-            if (prop == null)
+            var property = typeof(T).GetProperty(propertyName, PropertyBindingFlags);
+            if (property == null)
             {
                 return;
             }
 
             try
             {
-                var value = GetValueFromTracker(propertyName, valueString, prop.PropertyType);
+                var value = ConvertValue(propertyName, valueString, property.PropertyType);
 
-                if (prop.CanWrite)
-                {
-                    prop.SetValue(instance, value);
-                }
-                else
-                {
-                    var backingField = typeof(T).GetField($"<{propertyName}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-                    backingField?.SetValue(instance, value);
-                }
+                SetPropertyValue(instance, property, value);
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"Failed to set property '{propertyName}' with value '{valueString}'.", ex);
             }
+        }
+
+        private static void SetPropertyValue<T>(T instance, PropertyInfo property, object value)
+        {
+            if (property.CanWrite)
+            {
+                property.SetValue(instance, value);
+            }
+            else
+            {
+                TrySetBackingField(instance, property.Name, value);
+            }
+        }
+
+        private static void TrySetBackingField<T>(T instance, string propertyName, object value)
+        {
+            var backingFieldName = string.Format(BackingFieldNameFormat, propertyName);
+            var backingField = typeof(T).GetField(backingFieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            backingField?.SetValue(instance, value);
         }
 
         /// <summary>
@@ -115,19 +130,24 @@ namespace Reqnroll.Helpers
         /// <param name="valueString">The raw string value from the table.</param>
         /// <param name="propertyType">The target Type to convert the string into.</param>
         /// <returns>The converted object value.</returns>
-        private static object GetValueFromTracker(string propertyName, string valueString, Type propertyType)
+        private static object ConvertValue(string propertyName, string valueString, Type targetType)
         {
             var keyValuePair = new KeyValuePair<string, string>(propertyName, valueString);
 
             foreach (var retriever in Service.Instance.ValueRetrievers)
             {
-                if (retriever.CanRetrieve(keyValuePair, propertyType, propertyType))
+                if (retriever.CanRetrieve(keyValuePair, targetType, targetType))
                 {
-                    return retriever.Retrieve(keyValuePair, propertyType, propertyType);
+                    return retriever.Retrieve(keyValuePair, targetType, targetType);
                 }
             }
 
-            return Convert.ChangeType(value: valueString, propertyType, CultureInfo.InvariantCulture);
+            return Convert.ChangeType(value: valueString, targetType, CultureInfo.InvariantCulture);
+        }
+
+        private static bool IsVerticalTable(DataTable table)
+        {
+            return table.Header.Any(h => h.Equals(PropertyColumnName, StringComparison.OrdinalIgnoreCase));
         }
     }
 }
