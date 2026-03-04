@@ -43,6 +43,16 @@
             public bool IsMinor => Age < 18;
         }
 
+        public class PersonForAssertion
+        {
+            public string FirstName { get; set; } = string.Empty;
+            public string LastName { get; set; } = string.Empty;
+            public int Age { get; set; }
+            public string FullName => $"{FirstName} {LastName}".Trim();
+            public bool IsAdult => Age >= 18;
+            public string Status => IsAdult ? "Adult" : "Minor";
+        }
+
         #endregion
 
         #region Type Conversion Tests
@@ -118,9 +128,9 @@
         public void CreateSet_WithComputedProperties_OnlySetsInitProperties()
         {
             // Arrange
-            var table = new DataTable("FirstName", "LastName", "Age", "IsAdult");
-            table.AddRow("John", "Doe", "25", "true");
-            table.AddRow("Jane", "Smith", "17", "false");
+            var table = new DataTable("FirstName", "LastName", "Age");
+            table.AddRow("John", "Doe", "25");
+            table.AddRow("Jane", "Smith", "17");
 
             // Act
             var result = table.CreateSetWithReadOnlySupport<ComputedPropertyModel>();
@@ -141,6 +151,162 @@
             Assert.That(result[1].FullName, Is.EqualTo("Jane Smith"));
             Assert.That(result[1].IsAdult, Is.False);
             Assert.That(result[1].IsMinor, Is.True);
+        }
+
+        #endregion
+
+        #region Skip Computed Properties in Table Tests (Reqnroll Assertion Scenario)
+
+        [Test]
+        public void CreateSet_WithComputedPropertyInTable_SkipsComputedAndCalculatesCorrectly()
+        {
+            // Arrange - Table includes "IsAdult" column which is a computed property
+            var table = new DataTable("FirstName", "LastName", "Age", "IsAdult");
+            table.AddRow("John", "Doe", "25", "true");
+            table.AddRow("Jane", "Smith", "17", "false");
+
+            // Act
+            var result = table.CreateSetWithReadOnlySupport<PersonForAssertion>();
+
+            // Assert
+            Assert.That(result, Has.Count.EqualTo(2));
+
+            // First person - IsAdult column value "true" should be ignored, calculated from Age
+            Assert.That(result[0].FirstName, Is.EqualTo("John"));
+            Assert.That(result[0].Age, Is.EqualTo(25));
+            Assert.That(result[0].IsAdult, Is.True); // Calculated from Age >= 18, not from table
+
+            // Second person - IsAdult column value "false" should be ignored, calculated from Age
+            Assert.That(result[1].FirstName, Is.EqualTo("Jane"));
+            Assert.That(result[1].Age, Is.EqualTo(17));
+            Assert.That(result[1].IsAdult, Is.False); // Calculated from Age < 18, not from table
+        }
+
+        [Test]
+        public void CreateSet_WithMultipleComputedPropertiesInTable_SkipsAllComputedProperties()
+        {
+            // Arrange - Table includes multiple computed properties
+            var table = new DataTable("FirstName", "LastName", "Age", "FullName", "IsAdult", "Status");
+            table.AddRow("Alice", "Johnson", "30", "Wrong Name", "false", "Wrong Status");
+            table.AddRow("Bob", "Williams", "16", "Another Wrong", "true", "Invalid");
+
+            // Act
+            var result = table.CreateSetWithReadOnlySupport<PersonForAssertion>();
+
+            // Assert
+            Assert.That(result, Has.Count.EqualTo(2));
+
+            // First person - All computed values should come from calculation, not table
+            Assert.That(result[0].FirstName, Is.EqualTo("Alice"));
+            Assert.That(result[0].LastName, Is.EqualTo("Johnson"));
+            Assert.That(result[0].Age, Is.EqualTo(30));
+            Assert.That(result[0].FullName, Is.EqualTo("Alice Johnson")); // Computed, ignores "Wrong Name"
+            Assert.That(result[0].IsAdult, Is.True); // Computed from Age, ignores "false" from table
+            Assert.That(result[0].Status, Is.EqualTo("Adult")); // Computed, ignores "Wrong Status"
+
+            // Second person
+            Assert.That(result[1].FirstName, Is.EqualTo("Bob"));
+            Assert.That(result[1].LastName, Is.EqualTo("Williams"));
+            Assert.That(result[1].Age, Is.EqualTo(16));
+            Assert.That(result[1].FullName, Is.EqualTo("Bob Williams")); // Computed
+            Assert.That(result[1].IsAdult, Is.False); // Computed from Age, ignores "true" from table
+            Assert.That(result[1].Status, Is.EqualTo("Minor")); // Computed
+        }
+
+        [Test]
+        public void CreateInstance_Horizontal_WithComputedPropertyInTable_SkipsComputedProperty()
+        {
+            // Arrange
+            var table = new DataTable("FirstName", "LastName", "Age", "IsAdult", "Status");
+            table.AddRow("Charlie", "Brown", "20", "false", "Child");
+
+            // Act
+            var result = table.CreateInstanceWithReadOnlySupport<PersonForAssertion>();
+
+            // Assert
+            Assert.That(result.FirstName, Is.EqualTo("Charlie"));
+            Assert.That(result.LastName, Is.EqualTo("Brown"));
+            Assert.That(result.Age, Is.EqualTo(20));
+            Assert.That(result.FullName, Is.EqualTo("Charlie Brown")); // Computed
+            Assert.That(result.IsAdult, Is.True); // Computed from Age=20, ignores "false" from table
+            Assert.That(result.Status, Is.EqualTo("Adult")); // Computed, ignores "Child" from table
+        }
+
+        [Test]
+        public void CreateInstance_Vertical_WithComputedPropertyInTable_SkipsComputedProperty()
+        {
+            // Arrange
+            var table = new DataTable("Property", "Value");
+            table.AddRow("FirstName", "Diana");
+            table.AddRow("LastName", "Prince");
+            table.AddRow("Age", "15");
+            table.AddRow("IsAdult", "true"); // This should be ignored
+            table.AddRow("FullName", "Wrong Full Name"); // This should be ignored
+            table.AddRow("Status", "Adult"); // This should be ignored
+
+            // Act
+            var result = table.CreateInstanceWithReadOnlySupport<PersonForAssertion>();
+
+            // Assert
+            Assert.That(result.FirstName, Is.EqualTo("Diana"));
+            Assert.That(result.LastName, Is.EqualTo("Prince"));
+            Assert.That(result.Age, Is.EqualTo(15));
+            Assert.That(result.FullName, Is.EqualTo("Diana Prince")); // Computed, not from table
+            Assert.That(result.IsAdult, Is.False); // Computed from Age=15, not "true" from table
+            Assert.That(result.Status, Is.EqualTo("Minor")); // Computed, not "Adult" from table
+        }
+
+        [Test]
+        public void CreateSet_ReqnrollAssertionStyle_WithExpectedComputedValues()
+        {
+            // This mimics a real Reqnroll scenario where you assert with computed properties
+            // Given I have the following persons:
+            // | FirstName | LastName | Age | IsAdult |
+            // | John      | Doe      | 25  | true    |
+            // | Jane      | Smith    | 17  | false   |
+
+            // Arrange
+            var table = new DataTable("FirstName", "LastName", "Age", "IsAdult");
+            table.AddRow("John", "Doe", "25", "true");
+            table.AddRow("Jane", "Smith", "17", "false");
+
+            // Act
+            var actual = table.CreateSetWithReadOnlySupport<PersonForAssertion>();
+
+            // Then the results should match
+            var expected = new List<PersonForAssertion>
+            {
+                new() { FirstName = "John", LastName = "Doe", Age = 25 },
+                new() { FirstName = "Jane", LastName = "Smith", Age = 17 }
+            };
+
+            // Assert - comparing computed properties works because they calculate correctly
+            Assert.That(actual, Has.Count.EqualTo(2));
+
+            for (int i = 0; i < actual.Count; i++)
+            {
+                Assert.That(actual[i].FirstName, Is.EqualTo(expected[i].FirstName));
+                Assert.That(actual[i].LastName, Is.EqualTo(expected[i].LastName));
+                Assert.That(actual[i].Age, Is.EqualTo(expected[i].Age));
+                Assert.That(actual[i].IsAdult, Is.EqualTo(expected[i].IsAdult));
+            }
+        }
+
+        [Test]
+        public void CreateSet_OnlyComputedPropertiesInTable_DoesNotThrowException()
+        {
+            // Arrange - Table contains ONLY computed properties
+            var table = new DataTable("FullName", "IsAdult", "Status");
+            table.AddRow("John Doe", "true", "Adult");
+
+            // Act & Assert - Should not throw, just create empty/default object
+            Assert.DoesNotThrow(() =>
+            {
+                var result = table.CreateSetWithReadOnlySupport<PersonForAssertion>();
+                Assert.That(result, Has.Count.EqualTo(1));
+                Assert.That(result[0].FirstName, Is.EqualTo(string.Empty));
+                Assert.That(result[0].Age, Is.EqualTo(0));
+            });
         }
 
         #endregion
