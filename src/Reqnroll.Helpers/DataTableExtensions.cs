@@ -36,6 +36,33 @@ namespace Reqnroll.Helpers
         }
 
         /// <summary>
+        /// Creates a list of objects from a Reqnroll DataTable using a custom factory method.
+        /// Supports mapping to properties with private setters or read-only backing fields.
+        /// Useful when the type requires constructor parameters or custom initialization logic.
+        /// </summary>
+        /// <typeparam name="T">The type of object to create.</typeparam>
+        /// <param name="table">The Reqnroll DataTable containing the data rows.</param>
+        /// <param name="factory">A factory function that creates instances of type <typeparamref name="T"/>.</param>
+        /// <returns>A list of instances of type <typeparamref name="T"/> populated with data from the table.</returns>
+        public static List<T> CreateSetWithReadOnlySupport<T>(this DataTable table, Func<T> factory)
+        {
+            var items = new List<T>();
+
+            foreach (var row in table.Rows)
+            {
+                var instance = factory();
+                foreach (var header in table.Header)
+                {
+                    SetProperty(instance, header, row[header]);
+                }
+
+                items.Add(instance);
+            }
+
+            return items;
+        }
+
+        /// <summary>
         /// Creates a single instance of an object from a Reqnroll DataTable.
         /// Automatically detects if the table is horizontal (headers as properties) or vertical (Property/Value columns).
         /// </summary>
@@ -46,10 +73,6 @@ namespace Reqnroll.Helpers
         {
             var instance = new T();
 
-            // SCENARIO A: Vertical Table (Key/Value pairs)
-            // | Property | Value |
-            // | Name     | John  |
-            // | Age      | 44    |
             if (IsVerticalTable(table))
             {
                 foreach (var row in table.Rows)
@@ -57,9 +80,6 @@ namespace Reqnroll.Helpers
                     SetProperty(instance, row[0], row[1]);
                 }
             }
-            // SCENARIO B: Horizontal Table (Single row of data)
-            // | Name | Age |
-            // | John | 30  |
             else
             {
                 var row = table.Rows[0];
@@ -72,6 +92,37 @@ namespace Reqnroll.Helpers
             return instance;
         }
 
+        /// <summary>
+        /// Creates a single instance of an object from a Reqnroll DataTable using a custom factory method.
+        /// Automatically detects if the table is horizontal (headers as properties) or vertical (Property/Value columns).
+        /// Useful when the type requires constructor parameters or custom initialization logic.
+        /// </summary>
+        /// <typeparam name="T">The type of object to create.</typeparam>
+        /// <param name="table">The Reqnroll DataTable containing the data.</param>
+        /// <param name="factory">A factory function that creates an instance of type <typeparamref name="T"/>.</param>
+        /// <returns>A single instance of type <typeparamref name="T"/> populated with data from the table.</returns>
+        public static T CreateInstanceWithReadOnlySupport<T>(this DataTable table, Func<T> factory)
+        {
+            var instance = factory();
+
+            if (IsVerticalTable(table))
+            {
+                foreach (var row in table.Rows)
+                {
+                    SetProperty(instance, row[0], row[1]);
+                }
+            }
+            else
+            {
+                var row = table.Rows[0];
+                foreach (var header in table.Header)
+                {
+                    SetProperty(instance, header, row[header]);
+                }
+            }
+
+            return instance;
+        }
 
 
         /// <summary>
@@ -128,7 +179,7 @@ namespace Reqnroll.Helpers
         /// </summary>
         /// <param name="propertyName">Name of the property (used for mapping).</param>
         /// <param name="valueString">The raw string value from the table.</param>
-        /// <param name="propertyType">The target Type to convert the string into.</param>
+        /// <param name="targetType">The target Type to convert the string into.</param>
         /// <returns>The converted object value.</returns>
         private static object ConvertValue(string propertyName, string valueString, Type targetType)
         {
