@@ -118,9 +118,9 @@
         public void CreateSet_WithComputedProperties_OnlySetsInitProperties()
         {
             // Arrange
-            var table = new DataTable("FirstName", "LastName", "Age");
-            table.AddRow("John", "Doe", "25");
-            table.AddRow("Jane", "Smith", "17");
+            var table = new DataTable("FirstName", "LastName", "Age", "IsAdult");
+            table.AddRow("John", "Doe", "25", "true");
+            table.AddRow("Jane", "Smith", "17", "false");
 
             // Act
             var result = table.CreateSetWithReadOnlySupport<ComputedPropertyModel>();
