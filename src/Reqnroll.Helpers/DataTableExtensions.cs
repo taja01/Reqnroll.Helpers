@@ -7,8 +7,8 @@ namespace Reqnroll.Helpers
 {
     public static class DataTableExtensions
     {
-        private const BindingFlags PropertyBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-        private const string PropertyColumnName = "property";
+        private const BindingFlags PropertyBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase;
+        private static string[] PropertyColumnNames = { "property", "field" };
         private const string BackingFieldNameFormat = "<{0}>k__BackingField";
 
         /// <summary>
@@ -166,14 +166,14 @@ namespace Reqnroll.Helpers
             }
 
             // Check for required properties
-            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            var properties = type.GetProperties(PropertyBindingFlags);
             if (properties.Any(p => p.GetCustomAttribute<RequiredMemberAttribute>() != null))
             {
                 return true;
             }
 
             // Check for required fields
-            var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            var fields = type.GetFields(PropertyBindingFlags);
             if (fields.Any(f => f.GetCustomAttribute<RequiredMemberAttribute>() != null))
             {
                 return true;
@@ -194,7 +194,7 @@ namespace Reqnroll.Helpers
         /// <exception cref="InvalidOperationException">Thrown if the property cannot be set or conversion fails.</exception>
         private static void SetProperty<T>(T instance, string propertyName, string valueString)
         {
-            var property = typeof(T).GetProperty(propertyName, PropertyBindingFlags | BindingFlags.IgnoreCase);
+            var property = typeof(T).GetProperty(propertyName, PropertyBindingFlags);
             if (property != null)
             {
                 try
@@ -210,7 +210,7 @@ namespace Reqnroll.Helpers
             }
 
             // If no property found, try to find a field
-            var field = typeof(T).GetField(propertyName, PropertyBindingFlags | BindingFlags.IgnoreCase);
+            var field = typeof(T).GetField(propertyName, PropertyBindingFlags);
             if (field != null)
             {
                 try
@@ -272,7 +272,7 @@ namespace Reqnroll.Helpers
 
         private static bool IsVerticalTable(DataTable table)
         {
-            return table.Header.Any(h => h.Equals(PropertyColumnName, StringComparison.OrdinalIgnoreCase));
+            return table.Header.Any(h => PropertyColumnNames.Contains(h, StringComparer.OrdinalIgnoreCase));
         }
     }
 }
