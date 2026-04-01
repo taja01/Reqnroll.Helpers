@@ -300,7 +300,7 @@ public class RequiredModifierTests
     {
         // Arrange
         var table = new DataTable("Property", "Value");
-        table.AddRow("Name", "Test Name");
+        table.AddRow("name", "Test Name");
         table.AddRow("Age", "42");
         table.AddRow("Email", "test@example.com");
 

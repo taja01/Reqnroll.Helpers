@@ -194,7 +194,7 @@ namespace Reqnroll.Helpers
         /// <exception cref="InvalidOperationException">Thrown if the property cannot be set or conversion fails.</exception>
         private static void SetProperty<T>(T instance, string propertyName, string valueString)
         {
-            var property = typeof(T).GetProperty(propertyName, PropertyBindingFlags);
+            var property = typeof(T).GetProperty(propertyName, PropertyBindingFlags | BindingFlags.IgnoreCase);
             if (property != null)
             {
                 try
@@ -210,7 +210,7 @@ namespace Reqnroll.Helpers
             }
 
             // If no property found, try to find a field
-            var field = typeof(T).GetField(propertyName, PropertyBindingFlags);
+            var field = typeof(T).GetField(propertyName, PropertyBindingFlags | BindingFlags.IgnoreCase);
             if (field != null)
             {
                 try
