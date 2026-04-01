@@ -1,6 +1,7 @@
 ﻿using Reqnroll.Assist;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Reqnroll.Helpers
 {
@@ -65,13 +66,14 @@ namespace Reqnroll.Helpers
         /// <summary>
         /// Creates a single instance of an object from a Reqnroll DataTable.
         /// Automatically detects if the table is horizontal (headers as properties) or vertical (Property/Value columns).
+        /// Automatically handles types with required members by bypassing the constructor when necessary.
         /// </summary>
-        /// <typeparam name="T">The type of object to create. Must have a parameterless constructor.</typeparam>
+        /// <typeparam name="T">The type of object to create.</typeparam>
         /// <param name="table">The Reqnroll DataTable containing the data.</param>
         /// <returns>A single instance of type <typeparamref name="T"/>.</returns>
-        public static T CreateInstanceWithReadOnlySupport<T>(this DataTable table) where T : new()
+        public static T CreateInstanceWithReadOnlySupport<T>(this DataTable table)
         {
-            var instance = new T();
+            var instance = CreateInstance<T>();
 
             if (IsVerticalTable(table))
             {
@@ -124,34 +126,106 @@ namespace Reqnroll.Helpers
             return instance;
         }
 
+        /// <summary>
+        /// Creates an instance of type T, automatically choosing between calling the parameterless constructor
+        /// or using RuntimeHelpers.GetUninitializedObject for types with required members.
+        /// </summary>
+        private static T CreateInstance<T>()
+        {
+            var type = typeof(T);
+
+            // Check if type has required members
+            if (HasRequiredMembers(type))
+            {
+                return (T)RuntimeHelpers.GetUninitializedObject(type);
+            }
+
+            // Try using Activator.CreateInstance for types with parameterless constructor
+            try
+            {
+                return Activator.CreateInstance<T>();
+            }
+            catch
+            {
+                // Fallback to uninitialized object for types without accessible parameterless constructor
+                return (T)RuntimeHelpers.GetUninitializedObject(type);
+            }
+        }
+
+        /// <summary>
+        /// Checks if a type has any required members (properties or fields).
+        /// </summary>
+        private static bool HasRequiredMembers(Type type)
+        {
+            // Check for RequiredMemberAttribute on the type itself
+            if (type.GetCustomAttributes(typeof(CompilerFeatureRequiredAttribute), inherit: false)
+                .Cast<CompilerFeatureRequiredAttribute>()
+                .Any(attr => attr.FeatureName == "RequiredMembers"))
+            {
+                return true;
+            }
+
+            // Check for required properties
+            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (properties.Any(p => p.GetCustomAttribute<RequiredMemberAttribute>() != null))
+            {
+                return true;
+            }
+
+            // Check for required fields
+            var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (fields.Any(f => f.GetCustomAttribute<RequiredMemberAttribute>() != null))
+            {
+                return true;
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// Sets a property value on an instance using reflection. 
         /// If the property is read-only, it attempts to set the value via the C# compiler-generated backing field.
+        /// Also supports setting public fields directly.
         /// </summary>
         /// <typeparam name="T">The type of the instance.</typeparam>
         /// <param name="instance">The object instance to modify.</param>
-        /// <param name="propertyName">The name of the property to set.</param>
+        /// <param name="propertyName">The name of the property or field to set.</param>
         /// <param name="valueString">The string value from the DataTable to be converted and assigned.</param>
         /// <exception cref="InvalidOperationException">Thrown if the property cannot be set or conversion fails.</exception>
         private static void SetProperty<T>(T instance, string propertyName, string valueString)
         {
             var property = typeof(T).GetProperty(propertyName, PropertyBindingFlags);
-            if (property == null)
+            if (property != null)
             {
+                try
+                {
+                    var value = ConvertValue(propertyName, valueString, property.PropertyType);
+                    SetPropertyValue(instance, property, value);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to set property '{propertyName}' with value '{valueString}'.", ex);
+                }
                 return;
             }
 
-            try
+            // If no property found, try to find a field
+            var field = typeof(T).GetField(propertyName, PropertyBindingFlags);
+            if (field != null)
             {
-                var value = ConvertValue(propertyName, valueString, property.PropertyType);
+                try
+                {
+                    var value = ConvertValue(propertyName, valueString, field.FieldType);
+                    field.SetValue(instance, value);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to set field '{propertyName}' with value '{valueString}'.", ex);
+                }
+                return;
+            }
 
-                SetPropertyValue(instance, property, value);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to set property '{propertyName}' with value '{valueString}'.", ex);
-            }
+            // Neither property nor field found - silently ignore (existing behavior)
         }
 
         private static void SetPropertyValue<T>(T instance, PropertyInfo property, object value)
