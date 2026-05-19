@@ -84,10 +84,13 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Name, Is.EqualTo("John Doe"));
-        Assert.That(result.Age, Is.EqualTo(30));
-        Assert.That(result.Email, Is.EqualTo("john@example.com"));
-        Assert.That(result.OptionalField, Is.EqualTo("Optional"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Name, Is.EqualTo("John Doe"));
+            Assert.That(result.Age, Is.EqualTo(30));
+            Assert.That(result.Email, Is.EqualTo("john@example.com"));
+            Assert.That(result.OptionalField, Is.EqualTo("Optional"));
+        }
     }
 
     [Test]
@@ -103,11 +106,14 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Id, Is.EqualTo("ID123"));
-        Assert.That(result.Name, Is.EqualTo("Test Item"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Id, Is.EqualTo("ID123"));
+            Assert.That(result.Name, Is.EqualTo("Test Item"));
+        }
         // When using RuntimeHelpers.GetUninitializedObject, property initializers don't execute
         // So CreatedAt will be default(DateTime) unless explicitly set in the table
-        Assert.That(result.CreatedAt, Is.EqualTo(default(DateTime)));
+        Assert.That(result.CreatedAt, Is.Default);
     }
 
     [Test]
@@ -124,9 +130,12 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.MandatoryField, Is.EqualTo("MustHave"));
-        Assert.That(result.NormalField, Is.EqualTo("CanBeSet"));
-        Assert.That(result.NullableField, Is.EqualTo(42));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.MandatoryField, Is.EqualTo("MustHave"));
+            Assert.That(result.NormalField, Is.EqualTo("CanBeSet"));
+            Assert.That(result.NullableField, Is.EqualTo(42));
+        }
     }
 
     #endregion
@@ -160,9 +169,12 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Name, Is.EqualTo("Alice Smith"));
-        Assert.That(result.Age, Is.EqualTo(28));
-        Assert.That(result.Email, Is.EqualTo("alice@example.com"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Name, Is.EqualTo("Alice Smith"));
+            Assert.That(result.Age, Is.EqualTo(28));
+            Assert.That(result.Email, Is.EqualTo("alice@example.com"));
+        }
     }
 
     [Test]
@@ -177,10 +189,13 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Id, Is.EqualTo("H-ID456"));
-        Assert.That(result.Name, Is.EqualTo("Horizontal Item"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Id, Is.EqualTo("H-ID456"));
+            Assert.That(result.Name, Is.EqualTo("Horizontal Item"));
+        }
         // Property initializers don't run when bypassing constructor
-        Assert.That(result.CreatedAt, Is.EqualTo(default(DateTime)));
+        Assert.That(result.CreatedAt, Is.Default);
     }
 
     [Test]
@@ -195,9 +210,12 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.MandatoryField, Is.EqualTo("Required"));
-        Assert.That(result.NormalField, Is.EqualTo("Normal"));
-        Assert.That(result.NullableField, Is.EqualTo(99));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.MandatoryField, Is.EqualTo("Required"));
+            Assert.That(result.NormalField, Is.EqualTo("Normal"));
+            Assert.That(result.NullableField, Is.EqualTo(99));
+        }
     }
 
     #endregion
@@ -224,17 +242,20 @@ public class RequiredModifierTests
         // Assert
         Assert.That(result, Has.Count.EqualTo(3));
 
-        Assert.That(result[0].Name, Is.EqualTo("John Doe"));
-        Assert.That(result[0].Age, Is.EqualTo(30));
-        Assert.That(result[0].Email, Is.EqualTo("john@example.com"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result[0].Name, Is.EqualTo("John Doe"));
+            Assert.That(result[0].Age, Is.EqualTo(30));
+            Assert.That(result[0].Email, Is.EqualTo("john@example.com"));
 
-        Assert.That(result[1].Name, Is.EqualTo("Jane Smith"));
-        Assert.That(result[1].Age, Is.EqualTo(25));
-        Assert.That(result[1].Email, Is.EqualTo("jane@example.com"));
+            Assert.That(result[1].Name, Is.EqualTo("Jane Smith"));
+            Assert.That(result[1].Age, Is.EqualTo(25));
+            Assert.That(result[1].Email, Is.EqualTo("jane@example.com"));
 
-        Assert.That(result[2].Name, Is.EqualTo("Bob Johnson"));
-        Assert.That(result[2].Age, Is.EqualTo(35));
-        Assert.That(result[2].Email, Is.EqualTo("bob@example.com"));
+            Assert.That(result[2].Name, Is.EqualTo("Bob Johnson"));
+            Assert.That(result[2].Age, Is.EqualTo(35));
+            Assert.That(result[2].Email, Is.EqualTo("bob@example.com"));
+        }
     }
 
     #endregion
@@ -254,10 +275,13 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Name, Is.EqualTo("Partial Test"));
-        // Age and Email will have default values since RuntimeHelpers.GetUninitializedObject is used
-        Assert.That(result.Age, Is.EqualTo(0));
-        Assert.That(result.Email, Is.Null);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Name, Is.EqualTo("Partial Test"));
+            // Age and Email will have default values since RuntimeHelpers.GetUninitializedObject is used
+            Assert.That(result.Age, Is.Zero);
+            Assert.That(result.Email, Is.Null);
+        }
     }
 
     [Test]
@@ -273,8 +297,11 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.RequiredField, Is.EqualTo("FieldValue"));
-        Assert.That(result.NormalProperty, Is.EqualTo("PropertyValue"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.RequiredField, Is.EqualTo("FieldValue"));
+            Assert.That(result.NormalProperty, Is.EqualTo("PropertyValue"));
+        }
     }
 
     [Test]
@@ -314,9 +341,12 @@ public class RequiredModifierTests
         });
 
         // Assert
-        Assert.That(resultAuto.Name, Is.EqualTo(resultFactory.Name));
-        Assert.That(resultAuto.Age, Is.EqualTo(resultFactory.Age));
-        Assert.That(resultAuto.Email, Is.EqualTo(resultFactory.Email));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(resultAuto.Name, Is.EqualTo(resultFactory.Name));
+            Assert.That(resultAuto.Age, Is.EqualTo(resultFactory.Age));
+            Assert.That(resultAuto.Email, Is.EqualTo(resultFactory.Email));
+        }
     }
 
     #endregion
@@ -342,8 +372,11 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Name, Is.EqualTo("Normal User"));
-        Assert.That(result.Age, Is.EqualTo(25));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Name, Is.EqualTo("Normal User"));
+            Assert.That(result.Age, Is.EqualTo(25));
+        }
     }
 
     [Test]
@@ -358,8 +391,11 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Name, Is.EqualTo("Normal User 2"));
-        Assert.That(result.Age, Is.EqualTo(30));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Name, Is.EqualTo("Normal User 2"));
+            Assert.That(result.Age, Is.EqualTo(30));
+        }
     }
 
     #endregion
@@ -381,9 +417,12 @@ public class RequiredModifierTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Id, Is.EqualTo("ID789"));
-        Assert.That(result.Name, Is.EqualTo("Test Item with Date"));
-        Assert.That(result.CreatedAt, Is.EqualTo(expectedDate));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Id, Is.EqualTo("ID789"));
+            Assert.That(result.Name, Is.EqualTo("Test Item with Date"));
+            Assert.That(result.CreatedAt, Is.EqualTo(expectedDate));
+        }
     }
 
     #endregion

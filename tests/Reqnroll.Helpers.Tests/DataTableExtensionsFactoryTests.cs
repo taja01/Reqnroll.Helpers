@@ -5,32 +5,21 @@
     {
         #region Test Models with Constructor Parameters
 
-        public class PersonWithConstructor
+        public class PersonWithConstructor(string companyName)
         {
-            public PersonWithConstructor(string companyName)
-            {
-                CompanyName = companyName;
-            }
-
             public string FirstName { get; set; } = string.Empty;
             public string LastName { get; set; } = string.Empty;
             public int Age { get; set; }
-            public string CompanyName { get; }
+            public string CompanyName { get; } = companyName;
         }
 
-        public class ReadOnlyPersonWithConstructor
+        public class ReadOnlyPersonWithConstructor(string country)
         {
-            public ReadOnlyPersonWithConstructor(string country)
-            {
-                Country = country;
-                CreatedAt = DateTime.UtcNow;
-            }
-
             public string FirstName { get; init; } = string.Empty;
             public string LastName { get; init; } = string.Empty;
             public int Age { get; init; }
-            public string Country { get; }
-            public DateTime CreatedAt { get; }
+            public string Country { get; } = country;
+            public DateTime CreatedAt { get; } = DateTime.UtcNow;
         }
 
         public class OrderWithId
@@ -65,15 +54,21 @@
             // Assert
             Assert.That(result, Has.Count.EqualTo(2));
 
-            Assert.That(result[0].FirstName, Is.EqualTo("John"));
-            Assert.That(result[0].LastName, Is.EqualTo("Doe"));
-            Assert.That(result[0].Age, Is.EqualTo(30));
-            Assert.That(result[0].CompanyName, Is.EqualTo("Acme Corp"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].FirstName, Is.EqualTo("John"));
+                Assert.That(result[0].LastName, Is.EqualTo("Doe"));
+                Assert.That(result[0].Age, Is.EqualTo(30));
+                Assert.That(result[0].CompanyName, Is.EqualTo("Acme Corp"));
+            }
 
-            Assert.That(result[1].FirstName, Is.EqualTo("Jane"));
-            Assert.That(result[1].LastName, Is.EqualTo("Smith"));
-            Assert.That(result[1].Age, Is.EqualTo(25));
-            Assert.That(result[1].CompanyName, Is.EqualTo("Acme Corp"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[1].FirstName, Is.EqualTo("Jane"));
+                Assert.That(result[1].LastName, Is.EqualTo("Smith"));
+                Assert.That(result[1].Age, Is.EqualTo(25));
+                Assert.That(result[1].CompanyName, Is.EqualTo("Acme Corp"));
+            }
         }
 
         [Test]
@@ -92,17 +87,23 @@
             // Assert
             Assert.That(result, Has.Count.EqualTo(2));
 
-            Assert.That(result[0].FirstName, Is.EqualTo("Alice"));
-            Assert.That(result[0].LastName, Is.EqualTo("Johnson"));
-            Assert.That(result[0].Age, Is.EqualTo(28));
-            Assert.That(result[0].Country, Is.EqualTo("USA"));
-            Assert.That(result[0].CreatedAt, Is.GreaterThanOrEqualTo(testStartTime));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].FirstName, Is.EqualTo("Alice"));
+                Assert.That(result[0].LastName, Is.EqualTo("Johnson"));
+                Assert.That(result[0].Age, Is.EqualTo(28));
+                Assert.That(result[0].Country, Is.EqualTo("USA"));
+                Assert.That(result[0].CreatedAt, Is.GreaterThanOrEqualTo(testStartTime));
+            }
 
-            Assert.That(result[1].FirstName, Is.EqualTo("Bob"));
-            Assert.That(result[1].LastName, Is.EqualTo("Williams"));
-            Assert.That(result[1].Age, Is.EqualTo(35));
-            Assert.That(result[1].Country, Is.EqualTo("USA"));
-            Assert.That(result[1].CreatedAt, Is.GreaterThanOrEqualTo(testStartTime));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[1].FirstName, Is.EqualTo("Bob"));
+                Assert.That(result[1].LastName, Is.EqualTo("Williams"));
+                Assert.That(result[1].Age, Is.EqualTo(35));
+                Assert.That(result[1].Country, Is.EqualTo("USA"));
+                Assert.That(result[1].CreatedAt, Is.GreaterThanOrEqualTo(testStartTime));
+            }
         }
 
         [Test]
@@ -124,14 +125,23 @@
             var orderIds = result.Select(o => o.OrderId).ToList();
             Assert.That(orderIds, Is.Unique);
 
-            Assert.That(result[0].CustomerName, Is.EqualTo("Customer A"));
-            Assert.That(result[0].TotalAmount, Is.EqualTo(100.00m));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].CustomerName, Is.EqualTo("Customer A"));
+                Assert.That(result[0].TotalAmount, Is.EqualTo(100.00m));
+            }
 
-            Assert.That(result[1].CustomerName, Is.EqualTo("Customer B"));
-            Assert.That(result[1].TotalAmount, Is.EqualTo(200.00m));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[1].CustomerName, Is.EqualTo("Customer B"));
+                Assert.That(result[1].TotalAmount, Is.EqualTo(200.00m));
+            }
 
-            Assert.That(result[2].CustomerName, Is.EqualTo("Customer C"));
-            Assert.That(result[2].TotalAmount, Is.EqualTo(300.00m));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[2].CustomerName, Is.EqualTo("Customer C"));
+                Assert.That(result[2].TotalAmount, Is.EqualTo(300.00m));
+            }
         }
 
         [Test]
@@ -164,9 +174,12 @@
             });
 
             // Assert
-            Assert.That(result, Has.Count.EqualTo(1));
-            Assert.That(factoryCallCount, Is.EqualTo(1));
-            Assert.That(result[0].CompanyName, Is.EqualTo("Company-1"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result, Has.Count.EqualTo(1));
+                Assert.That(factoryCallCount, Is.EqualTo(1));
+                Assert.That(result[0].CompanyName, Is.EqualTo("Company-1"));
+            }
         }
 
         #endregion
@@ -184,10 +197,13 @@
             var result = table.CreateInstanceWithReadOnlySupport(() => new PersonWithConstructor("Tech Inc"));
 
             // Assert
-            Assert.That(result.FirstName, Is.EqualTo("Diana"));
-            Assert.That(result.LastName, Is.EqualTo("Prince"));
-            Assert.That(result.Age, Is.EqualTo(32));
-            Assert.That(result.CompanyName, Is.EqualTo("Tech Inc"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.FirstName, Is.EqualTo("Diana"));
+                Assert.That(result.LastName, Is.EqualTo("Prince"));
+                Assert.That(result.Age, Is.EqualTo(32));
+                Assert.That(result.CompanyName, Is.EqualTo("Tech Inc"));
+            }
         }
 
         [Test]
@@ -203,11 +219,14 @@
             var result = table.CreateInstanceWithReadOnlySupport(() => new ReadOnlyPersonWithConstructor("Canada"));
 
             // Assert
-            Assert.That(result.FirstName, Is.EqualTo("Eve"));
-            Assert.That(result.LastName, Is.EqualTo("Anderson"));
-            Assert.That(result.Age, Is.EqualTo(27));
-            Assert.That(result.Country, Is.EqualTo("Canada"));
-            Assert.That(result.CreatedAt, Is.GreaterThanOrEqualTo(testStartTime));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.FirstName, Is.EqualTo("Eve"));
+                Assert.That(result.LastName, Is.EqualTo("Anderson"));
+                Assert.That(result.Age, Is.EqualTo(27));
+                Assert.That(result.Country, Is.EqualTo("Canada"));
+                Assert.That(result.CreatedAt, Is.GreaterThanOrEqualTo(testStartTime));
+            }
         }
 
         [Test]
@@ -221,10 +240,13 @@
             var result = table.CreateInstanceWithReadOnlySupport(() => new OrderWithId());
 
             // Assert
-            Assert.That(result.OrderId, Is.Not.Empty);
-            Assert.That(result.OrderId, Does.StartWith("ORD-"));
-            Assert.That(result.CustomerName, Is.EqualTo("Test Customer"));
-            Assert.That(result.TotalAmount, Is.EqualTo(500.00m));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.OrderId, Is.Not.Empty);
+                Assert.That(result.OrderId, Does.StartWith("ORD-"));
+                Assert.That(result.CustomerName, Is.EqualTo("Test Customer"));
+                Assert.That(result.TotalAmount, Is.EqualTo(500.00m));
+            }
         }
 
         #endregion
@@ -244,10 +266,13 @@
             var result = table.CreateInstanceWithReadOnlySupport(() => new PersonWithConstructor("Global Corp"));
 
             // Assert
-            Assert.That(result.FirstName, Is.EqualTo("Frank"));
-            Assert.That(result.LastName, Is.EqualTo("Miller"));
-            Assert.That(result.Age, Is.EqualTo(45));
-            Assert.That(result.CompanyName, Is.EqualTo("Global Corp"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.FirstName, Is.EqualTo("Frank"));
+                Assert.That(result.LastName, Is.EqualTo("Miller"));
+                Assert.That(result.Age, Is.EqualTo(45));
+                Assert.That(result.CompanyName, Is.EqualTo("Global Corp"));
+            }
         }
 
         [Test]
@@ -265,11 +290,14 @@
             var result = table.CreateInstanceWithReadOnlySupport(() => new ReadOnlyPersonWithConstructor("UK"));
 
             // Assert
-            Assert.That(result.FirstName, Is.EqualTo("Grace"));
-            Assert.That(result.LastName, Is.EqualTo("Hopper"));
-            Assert.That(result.Age, Is.EqualTo(29));
-            Assert.That(result.Country, Is.EqualTo("UK"));
-            Assert.That(result.CreatedAt, Is.GreaterThanOrEqualTo(testStartTime));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.FirstName, Is.EqualTo("Grace"));
+                Assert.That(result.LastName, Is.EqualTo("Hopper"));
+                Assert.That(result.Age, Is.EqualTo(29));
+                Assert.That(result.Country, Is.EqualTo("UK"));
+                Assert.That(result.CreatedAt, Is.GreaterThanOrEqualTo(testStartTime));
+            }
         }
 
         [Test]
@@ -284,10 +312,13 @@
             var result = table.CreateInstanceWithReadOnlySupport(() => new OrderWithId());
 
             // Assert
-            Assert.That(result.OrderId, Is.Not.Empty);
-            Assert.That(result.OrderId, Does.StartWith("ORD-"));
-            Assert.That(result.CustomerName, Is.EqualTo("Vertical Customer"));
-            Assert.That(result.TotalAmount, Is.EqualTo(750.50m));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.OrderId, Is.Not.Empty);
+                Assert.That(result.OrderId, Does.StartWith("ORD-"));
+                Assert.That(result.CustomerName, Is.EqualTo("Vertical Customer"));
+                Assert.That(result.TotalAmount, Is.EqualTo(750.50m));
+            }
         }
 
         [Test]
@@ -302,9 +333,12 @@
             var result = table.CreateInstanceWithReadOnlySupport(() => new PersonWithConstructor("Test Company"));
 
             // Assert
-            Assert.That(result.FirstName, Is.EqualTo("Helen"));
-            Assert.That(result.Age, Is.EqualTo(33));
-            Assert.That(result.CompanyName, Is.EqualTo("Test Company"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.FirstName, Is.EqualTo("Helen"));
+                Assert.That(result.Age, Is.EqualTo(33));
+                Assert.That(result.CompanyName, Is.EqualTo("Test Company"));
+            }
         }
 
         #endregion
@@ -377,9 +411,12 @@
 
             // Assert
             Assert.That(result, Has.Count.EqualTo(1));
-            Assert.That(result[0].FirstName, Is.EqualTo("Ivan"));
-            Assert.That(result[0].Age, Is.EqualTo(33));
-            Assert.That(result[0].CompanyName, Is.EqualTo("My Company"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].FirstName, Is.EqualTo("Ivan"));
+                Assert.That(result[0].Age, Is.EqualTo(33));
+                Assert.That(result[0].CompanyName, Is.EqualTo("My Company"));
+            }
         }
 
         [Test]
@@ -393,10 +430,13 @@
             var result = table.CreateInstanceWithReadOnlySupport(() => new PersonWithConstructor("Partial Co"));
 
             // Assert
-            Assert.That(result.FirstName, Is.EqualTo("Jack"));
-            Assert.That(result.Age, Is.EqualTo(0)); // Default value
-            Assert.That(result.LastName, Is.EqualTo(string.Empty)); // Default value
-            Assert.That(result.CompanyName, Is.EqualTo("Partial Co"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.FirstName, Is.EqualTo("Jack"));
+                Assert.That(result.Age, Is.Zero); // Default value
+                Assert.That(result.LastName, Is.EqualTo(string.Empty)); // Default value
+                Assert.That(result.CompanyName, Is.EqualTo("Partial Co"));
+            }
         }
 
         #endregion

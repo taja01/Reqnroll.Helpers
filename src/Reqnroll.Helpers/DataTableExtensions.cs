@@ -8,7 +8,7 @@ namespace Reqnroll.Helpers
     public static class DataTableExtensions
     {
         private const BindingFlags PropertyBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase;
-        private static string[] PropertyColumnNames = { "property", "field" };
+        private static readonly string[] PropertyColumnNames = ["property", "field"];
         private const string BackingFieldNameFormat = "<{0}>k__BackingField";
 
         /// <summary>

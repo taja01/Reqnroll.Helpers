@@ -147,6 +147,9 @@ namespace Reqnroll.Helpers.Tests
 
             // Act
             var result = table.CreateSet<Product>();
+
+            // Assert
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
@@ -224,12 +227,15 @@ namespace Reqnroll.Helpers.Tests
             var result = table.CreateInstance<Order>();
 
             // Assert
-            Assert.That(result.OrderId, Is.EqualTo("ORD003"));
-            Assert.That(result.CustomerName, Is.EqualTo("Charlie Brown"));
-            Assert.That(result.OrderDate, Is.EqualTo(new DateTime(2026, 2, 14)));
-            Assert.That(result.TotalAmount, Is.EqualTo(500.00m));
-            Assert.That(result.Products, Is.Not.Null);
-            Assert.That(result.Products, Is.Empty);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.OrderId, Is.EqualTo("ORD003"));
+                Assert.That(result.CustomerName, Is.EqualTo("Charlie Brown"));
+                Assert.That(result.OrderDate, Is.EqualTo(new DateTime(2026, 2, 14)));
+                Assert.That(result.TotalAmount, Is.EqualTo(500.00m));
+                Assert.That(result.Products, Is.Not.Null);
+                Assert.That(result.Products, Is.Empty);
+            }
         }
 
         [Test]
@@ -246,12 +252,15 @@ namespace Reqnroll.Helpers.Tests
             var result = table.CreateInstance<Order>();
 
             // Assert
-            Assert.That(result.OrderId, Is.EqualTo("ORD004"));
-            Assert.That(result.CustomerName, Is.EqualTo("Diana Ross"));
-            Assert.That(result.OrderDate, Is.EqualTo(new DateTime(2026, 1, 15)));
-            Assert.That(result.TotalAmount, Is.EqualTo(750.50m));
-            Assert.That(result.Products, Is.Not.Null);
-            Assert.That(result.Products, Is.Empty);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.OrderId, Is.EqualTo("ORD004"));
+                Assert.That(result.CustomerName, Is.EqualTo("Diana Ross"));
+                Assert.That(result.OrderDate, Is.EqualTo(new DateTime(2026, 1, 15)));
+                Assert.That(result.TotalAmount, Is.EqualTo(750.50m));
+                Assert.That(result.Products, Is.Not.Null);
+                Assert.That(result.Products, Is.Empty);
+            }
         }
 
         [Test]
@@ -263,6 +272,9 @@ namespace Reqnroll.Helpers.Tests
 
             // Act
             var result = table.CreateSet<ReadOnlyOrder>();
+
+            // Assert
+            ////Assert.That(result, Has.Count.EqualTo(1));
         }
 
         [Test]
@@ -276,11 +288,14 @@ namespace Reqnroll.Helpers.Tests
             var result = table.CreateInstance<ReadOnlyOrder>();
 
             // Assert
-            Assert.That(result.OrderId, Is.EqualTo("ORD006"));
-            Assert.That(result.CustomerName, Is.EqualTo("Frank Miller"));
-            Assert.That(result.OrderDate, Is.EqualTo(new DateTime(2026, 3, 1)));
-            Assert.That(result.Products, Is.Not.Null);
-            Assert.That(result.Products, Is.Empty);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.OrderId, Is.EqualTo("ORD006"));
+                Assert.That(result.CustomerName, Is.EqualTo("Frank Miller"));
+                Assert.That(result.OrderDate, Is.EqualTo(new DateTime(2026, 3, 1)));
+                Assert.That(result.Products, Is.Not.Null);
+                Assert.That(result.Products, Is.Empty);
+            }
         }
 
         #endregion
@@ -311,7 +326,11 @@ namespace Reqnroll.Helpers.Tests
             var result = table.CreateSet<Person>();
 
             // Assert
-
+            Assert.That(result, Is.Not.Null);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.First().Age, Is.EqualTo(33));
+            }
         }
 
         [Test]
@@ -325,9 +344,12 @@ namespace Reqnroll.Helpers.Tests
             var result = table.CreateInstance<Person>();
 
             // Assert
-            Assert.That(result.FirstName, Is.EqualTo("Ivan"));
-            Assert.That(result.Age, Is.EqualTo(0)); // Default value
-            Assert.That(result.Email, Is.EqualTo(string.Empty)); // Default value
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.FirstName, Is.EqualTo("Ivan"));
+                Assert.That(result.Age, Is.Zero); // Default value
+                Assert.That(result.Email, Is.EqualTo(string.Empty)); // Default value
+            }
         }
 
         [Test]
@@ -341,9 +363,12 @@ namespace Reqnroll.Helpers.Tests
             // Act
             var result = table.CreateInstance<Person>();
 
-            // Assert
-            Assert.That(result.FirstName, Is.EqualTo("Frank"));
-            Assert.That(result.Age, Is.EqualTo(45));
+            using (Assert.EnterMultipleScope())
+            {
+                // Assert
+                Assert.That(result.FirstName, Is.EqualTo("Frank"));
+                Assert.That(result.Age, Is.EqualTo(45));
+            }
         }
 
         #endregion

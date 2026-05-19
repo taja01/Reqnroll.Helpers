@@ -72,13 +72,16 @@
 
             // Assert
             Assert.That(result, Has.Count.EqualTo(1));
-            Assert.That(result[0].IntValue, Is.EqualTo(42));
-            Assert.That(result[0].DecimalValue, Is.EqualTo(19.99m));
-            Assert.That(result[0].DoubleValue, Is.EqualTo(3.14159).Within(0.00001));
-            Assert.That(result[0].BoolValue, Is.True);
-            Assert.That(result[0].DateTimeValue, Is.EqualTo(testDate));
-            Assert.That(result[0].GuidValue, Is.EqualTo(testGuid));
-            Assert.That(result[0].StringValue, Is.EqualTo("Test String"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].IntValue, Is.EqualTo(42));
+                Assert.That(result[0].DecimalValue, Is.EqualTo(19.99m));
+                Assert.That(result[0].DoubleValue, Is.EqualTo(3.14159).Within(0.00001));
+                Assert.That(result[0].BoolValue, Is.True);
+                Assert.That(result[0].DateTimeValue, Is.EqualTo(testDate));
+                Assert.That(result[0].GuidValue, Is.EqualTo(testGuid));
+                Assert.That(result[0].StringValue, Is.EqualTo("Test String"));
+            }
         }
 
         [Test]
@@ -94,10 +97,13 @@
             var result = table.CreateInstanceWithReadOnlySupport<TypeConversionModel>();
 
             // Assert
-            Assert.That(result.IntValue, Is.EqualTo(100));
-            Assert.That(result.DecimalValue, Is.EqualTo(99.95m));
-            Assert.That(result.BoolValue, Is.False);
-            Assert.That(result.GuidValue, Is.EqualTo(testGuid));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.IntValue, Is.EqualTo(100));
+                Assert.That(result.DecimalValue, Is.EqualTo(99.95m));
+                Assert.That(result.BoolValue, Is.False);
+                Assert.That(result.GuidValue, Is.EqualTo(testGuid));
+            }
         }
 
         [Test]
@@ -114,10 +120,13 @@
             var result = table.CreateInstanceWithReadOnlySupport<TypeConversionModel>();
 
             // Assert
-            Assert.That(result.IntValue, Is.EqualTo(999));
-            Assert.That(result.DecimalValue, Is.EqualTo(123.45m));
-            Assert.That(result.BoolValue, Is.True);
-            Assert.That(result.StringValue, Is.EqualTo("Vertical Test"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.IntValue, Is.EqualTo(999));
+                Assert.That(result.DecimalValue, Is.EqualTo(123.45m));
+                Assert.That(result.BoolValue, Is.True);
+                Assert.That(result.StringValue, Is.EqualTo("Vertical Test"));
+            }
         }
 
         #endregion
@@ -138,19 +147,25 @@
             // Assert
             Assert.That(result, Has.Count.EqualTo(2));
 
-            Assert.That(result[0].FirstName, Is.EqualTo("John"));
-            Assert.That(result[0].LastName, Is.EqualTo("Doe"));
-            Assert.That(result[0].Age, Is.EqualTo(25));
-            Assert.That(result[0].FullName, Is.EqualTo("John Doe"));
-            Assert.That(result[0].IsAdult, Is.True);
-            Assert.That(result[0].IsMinor, Is.False);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].FirstName, Is.EqualTo("John"));
+                Assert.That(result[0].LastName, Is.EqualTo("Doe"));
+                Assert.That(result[0].Age, Is.EqualTo(25));
+                Assert.That(result[0].FullName, Is.EqualTo("John Doe"));
+                Assert.That(result[0].IsAdult, Is.True);
+                Assert.That(result[0].IsMinor, Is.False);
+            }
 
-            Assert.That(result[1].FirstName, Is.EqualTo("Jane"));
-            Assert.That(result[1].LastName, Is.EqualTo("Smith"));
-            Assert.That(result[1].Age, Is.EqualTo(17));
-            Assert.That(result[1].FullName, Is.EqualTo("Jane Smith"));
-            Assert.That(result[1].IsAdult, Is.False);
-            Assert.That(result[1].IsMinor, Is.True);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[1].FirstName, Is.EqualTo("Jane"));
+                Assert.That(result[1].LastName, Is.EqualTo("Smith"));
+                Assert.That(result[1].Age, Is.EqualTo(17));
+                Assert.That(result[1].FullName, Is.EqualTo("Jane Smith"));
+                Assert.That(result[1].IsAdult, Is.False);
+                Assert.That(result[1].IsMinor, Is.True);
+            }
         }
 
         #endregion
@@ -172,14 +187,20 @@
             Assert.That(result, Has.Count.EqualTo(2));
 
             // First person - IsAdult column value "true" should be ignored, calculated from Age
-            Assert.That(result[0].FirstName, Is.EqualTo("John"));
-            Assert.That(result[0].Age, Is.EqualTo(25));
-            Assert.That(result[0].IsAdult, Is.True); // Calculated from Age >= 18, not from table
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].FirstName, Is.EqualTo("John"));
+                Assert.That(result[0].Age, Is.EqualTo(25));
+                Assert.That(result[0].IsAdult, Is.True); // Calculated from Age >= 18, not from table
+            }
 
             // Second person - IsAdult column value "false" should be ignored, calculated from Age
-            Assert.That(result[1].FirstName, Is.EqualTo("Jane"));
-            Assert.That(result[1].Age, Is.EqualTo(17));
-            Assert.That(result[1].IsAdult, Is.False); // Calculated from Age < 18, not from table
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[1].FirstName, Is.EqualTo("Jane"));
+                Assert.That(result[1].Age, Is.EqualTo(17));
+                Assert.That(result[1].IsAdult, Is.False); // Calculated from Age < 18, not from table
+            }
         }
 
         [Test]
@@ -197,20 +218,26 @@
             Assert.That(result, Has.Count.EqualTo(2));
 
             // First person - All computed values should come from calculation, not table
-            Assert.That(result[0].FirstName, Is.EqualTo("Alice"));
-            Assert.That(result[0].LastName, Is.EqualTo("Johnson"));
-            Assert.That(result[0].Age, Is.EqualTo(30));
-            Assert.That(result[0].FullName, Is.EqualTo("Alice Johnson")); // Computed, ignores "Wrong Name"
-            Assert.That(result[0].IsAdult, Is.True); // Computed from Age, ignores "false" from table
-            Assert.That(result[0].Status, Is.EqualTo("Adult")); // Computed, ignores "Wrong Status"
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].FirstName, Is.EqualTo("Alice"));
+                Assert.That(result[0].LastName, Is.EqualTo("Johnson"));
+                Assert.That(result[0].Age, Is.EqualTo(30));
+                Assert.That(result[0].FullName, Is.EqualTo("Alice Johnson")); // Computed, ignores "Wrong Name"
+                Assert.That(result[0].IsAdult, Is.True); // Computed from Age, ignores "false" from table
+                Assert.That(result[0].Status, Is.EqualTo("Adult")); // Computed, ignores "Wrong Status"
+            }
 
             // Second person
-            Assert.That(result[1].FirstName, Is.EqualTo("Bob"));
-            Assert.That(result[1].LastName, Is.EqualTo("Williams"));
-            Assert.That(result[1].Age, Is.EqualTo(16));
-            Assert.That(result[1].FullName, Is.EqualTo("Bob Williams")); // Computed
-            Assert.That(result[1].IsAdult, Is.False); // Computed from Age, ignores "true" from table
-            Assert.That(result[1].Status, Is.EqualTo("Minor")); // Computed
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[1].FirstName, Is.EqualTo("Bob"));
+                Assert.That(result[1].LastName, Is.EqualTo("Williams"));
+                Assert.That(result[1].Age, Is.EqualTo(16));
+                Assert.That(result[1].FullName, Is.EqualTo("Bob Williams")); // Computed
+                Assert.That(result[1].IsAdult, Is.False); // Computed from Age, ignores "true" from table
+                Assert.That(result[1].Status, Is.EqualTo("Minor")); // Computed
+            }
         }
 
         [Test]
@@ -224,12 +251,15 @@
             var result = table.CreateInstanceWithReadOnlySupport<PersonForAssertion>();
 
             // Assert
-            Assert.That(result.FirstName, Is.EqualTo("Charlie"));
-            Assert.That(result.LastName, Is.EqualTo("Brown"));
-            Assert.That(result.Age, Is.EqualTo(20));
-            Assert.That(result.FullName, Is.EqualTo("Charlie Brown")); // Computed
-            Assert.That(result.IsAdult, Is.True); // Computed from Age=20, ignores "false" from table
-            Assert.That(result.Status, Is.EqualTo("Adult")); // Computed, ignores "Child" from table
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.FirstName, Is.EqualTo("Charlie"));
+                Assert.That(result.LastName, Is.EqualTo("Brown"));
+                Assert.That(result.Age, Is.EqualTo(20));
+                Assert.That(result.FullName, Is.EqualTo("Charlie Brown")); // Computed
+                Assert.That(result.IsAdult, Is.True); // Computed from Age=20, ignores "false" from table
+                Assert.That(result.Status, Is.EqualTo("Adult")); // Computed, ignores "Child" from table
+            }
         }
 
         [Test]
@@ -248,12 +278,15 @@
             var result = table.CreateInstanceWithReadOnlySupport<PersonForAssertion>();
 
             // Assert
-            Assert.That(result.FirstName, Is.EqualTo("Diana"));
-            Assert.That(result.LastName, Is.EqualTo("Prince"));
-            Assert.That(result.Age, Is.EqualTo(15));
-            Assert.That(result.FullName, Is.EqualTo("Diana Prince")); // Computed, not from table
-            Assert.That(result.IsAdult, Is.False); // Computed from Age=15, not "true" from table
-            Assert.That(result.Status, Is.EqualTo("Minor")); // Computed, not "Adult" from table
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.FirstName, Is.EqualTo("Diana"));
+                Assert.That(result.LastName, Is.EqualTo("Prince"));
+                Assert.That(result.Age, Is.EqualTo(15));
+                Assert.That(result.FullName, Is.EqualTo("Diana Prince")); // Computed, not from table
+                Assert.That(result.IsAdult, Is.False); // Computed from Age=15, not "true" from table
+                Assert.That(result.Status, Is.EqualTo("Minor")); // Computed, not "Adult" from table
+            }
         }
 
         [Test]
@@ -285,10 +318,13 @@
 
             for (int i = 0; i < actual.Count; i++)
             {
-                Assert.That(actual[i].FirstName, Is.EqualTo(expected[i].FirstName));
-                Assert.That(actual[i].LastName, Is.EqualTo(expected[i].LastName));
-                Assert.That(actual[i].Age, Is.EqualTo(expected[i].Age));
-                Assert.That(actual[i].IsAdult, Is.EqualTo(expected[i].IsAdult));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(actual[i].FirstName, Is.EqualTo(expected[i].FirstName));
+                    Assert.That(actual[i].LastName, Is.EqualTo(expected[i].LastName));
+                    Assert.That(actual[i].Age, Is.EqualTo(expected[i].Age));
+                    Assert.That(actual[i].IsAdult, Is.EqualTo(expected[i].IsAdult));
+                }
             }
         }
 
@@ -304,8 +340,11 @@
             {
                 var result = table.CreateSetWithReadOnlySupport<PersonForAssertion>();
                 Assert.That(result, Has.Count.EqualTo(1));
-                Assert.That(result[0].FirstName, Is.EqualTo(string.Empty));
-                Assert.That(result[0].Age, Is.EqualTo(0));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result[0].FirstName, Is.EqualTo(string.Empty));
+                    Assert.That(result[0].Age, Is.Zero);
+                }
             });
         }
 
@@ -325,10 +364,13 @@
 
             // Assert
             Assert.That(result, Has.Count.EqualTo(1));
-            Assert.That(result[0].PublicProperty, Is.EqualTo("Public"));
-            Assert.That(result[0].InternalProperty, Is.EqualTo("Internal"));
-            // Protected and Private properties are set via reflection
-            Assert.That(result[0].GetPrivateProperty(), Is.EqualTo("Private"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].PublicProperty, Is.EqualTo("Public"));
+                Assert.That(result[0].InternalProperty, Is.EqualTo("Internal"));
+                // Protected and Private properties are set via reflection
+                Assert.That(result[0].GetPrivateProperty(), Is.EqualTo("Private"));
+            }
         }
 
         #endregion
@@ -402,8 +444,11 @@
             var result = table.CreateInstanceWithReadOnlySupport<TypeConversionModel>();
 
             // Assert
-            Assert.That(result.IntValue, Is.EqualTo(42));
-            Assert.That(result.StringValue, Is.EqualTo("Test"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result.IntValue, Is.EqualTo(42));
+                Assert.That(result.StringValue, Is.EqualTo("Test"));
+            }
         }
 
         #endregion
@@ -422,8 +467,11 @@
 
             // Assert
             Assert.That(result, Has.Count.EqualTo(1));
-            Assert.That(result[0].IntValue, Is.EqualTo(0));
-            Assert.That(result[0].StringValue, Is.EqualTo(string.Empty));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].IntValue, Is.Zero);
+                Assert.That(result[0].StringValue, Is.EqualTo(string.Empty));
+            }
         }
 
         #endregion
@@ -446,12 +494,15 @@
 
             // Assert
             Assert.That(result, Has.Count.EqualTo(5));
-            Assert.That(result[0].IntValue, Is.EqualTo(1));
-            Assert.That(result[0].BoolValue, Is.True);
-            Assert.That(result[1].IntValue, Is.EqualTo(2));
-            Assert.That(result[1].BoolValue, Is.False);
-            Assert.That(result[4].IntValue, Is.EqualTo(5));
-            Assert.That(result[4].BoolValue, Is.True);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result[0].IntValue, Is.EqualTo(1));
+                Assert.That(result[0].BoolValue, Is.True);
+                Assert.That(result[1].IntValue, Is.EqualTo(2));
+                Assert.That(result[1].BoolValue, Is.False);
+                Assert.That(result[4].IntValue, Is.EqualTo(5));
+                Assert.That(result[4].BoolValue, Is.True);
+            }
         }
 
         #endregion
